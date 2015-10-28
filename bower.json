@@ -1,0 +1,26 @@
+{
+  "name": "lesson5",
+  "version": "0.1.0",
+  "homepage": "https://github.com/spolischook/GH5-lesson5",
+  "authors": [
+    "spolischook <spolischook@gmail.com>"
+  ],
+  "description": "GH5 lesson5",
+  "main": "",
+  "moduleType": [],
+  "keywords": [
+    "tdd",
+    "tests"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "Chart.js": "~1.0.2"
+  }
+}
