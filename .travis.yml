@@ -9,6 +9,7 @@ php:
 before_script:
     - composer self-update
     - composer install
+		- phpenv config-add travis.ini
 
 
 script:
