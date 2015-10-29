@@ -5,10 +5,9 @@ php:
   - nightly
 
 before_script:
+    - phpenv config-add travis.ini
     - composer self-update
     - composer install
-    - phpenv config-add travis.ini
-
 
 script:
   - php phpunit
