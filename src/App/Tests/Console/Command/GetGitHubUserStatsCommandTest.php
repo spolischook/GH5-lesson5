@@ -18,6 +18,7 @@ class GetGitHubUserStatsCommandTest extends \PHPUnit_Framework_TestCase
         $commandTester->execute(array('command' => $command->getName()));
 
         $this->assertRegExp('/get GitHub stats/', $commandTester->getDisplay());
+        $this->assertRegExp('/Success/', $commandTester->getDisplay());
     }
 }
 
