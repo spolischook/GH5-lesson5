@@ -2,6 +2,7 @@
 
 namespace App\Console\Command;
 
+use Github\Client;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -37,15 +38,19 @@ class GetGitHubUserStatsCommand extends Command
     {
         $output->writeln('get GitHub stats');
 
-        $githubClient = new \Github\Client();
+        $githubClient = new Client();
+        $githubClient->authenticate(file_get_contents(realpath(__DIR__."/../../../../.github-token")), Client::AUTH_HTTP_TOKEN);
 
         foreach ($this->getParameters()["students_github_usernames"] as $username) {
-            /** @var \Github\Api\User $ghUser */
-            $ghUser = $githubClient->api('users');
-            $repositories = $ghUser->repositories($username, 'all');
+            $dbUser = $this->db->users->findOne(['username' => $username]) ?: ['username' => $username];
 
-            var_dump(count($repositories));exit;
+            $dbUser['users/'.rawurlencode($username)] = $githubClient->api('users')->show($username);
+            $dbUser['users/'.rawurlencode($username).'/repos'] = $githubClient->api('users')->repositories($username, 'all');
+
+            $status = $this->db->users->insert($dbUser);
         }
+
+        $output->writeln('Success import');
     }
 
     /**
