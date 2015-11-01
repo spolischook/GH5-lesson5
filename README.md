@@ -12,6 +12,14 @@ For update statistic use console command
 bin/console get-github-user-stats
 ```
 
+### Tests
+
+You can run tests in console
+
+```
+php phpunit
+```
+
 ### License
 
 MIT: https://opensource.org/licenses/MIT
