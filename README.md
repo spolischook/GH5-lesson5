@@ -3,8 +3,8 @@ GH5 Lesson #5
 
 GH5 students GitHub statistic
 
-Usage
------
+### Usage
+
 
 For update statistic use console command
 
