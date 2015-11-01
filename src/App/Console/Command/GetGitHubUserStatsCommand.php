@@ -4,6 +4,7 @@ namespace App\Console\Command;
 
 use Github\Client;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -21,11 +22,11 @@ class GetGitHubUserStatsCommand extends Command
     /**
      * {@inheritdoc}
      */
-    public function __construct($name = null)
+    public function __construct($name = 'get-github-user-stats')
     {
         $this->initDb();
 
-        parent::__construct('get-github-user-stats');
+        parent::__construct($name);
     }
 
     /**
@@ -37,19 +38,24 @@ class GetGitHubUserStatsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln('get GitHub stats');
+        $progress = new ProgressBar($output);
+        $usernames = $this->getParameters()["students_github_usernames"];
+        $progress->start(count($usernames));
 
         $githubClient = new Client();
         $githubClient->authenticate(file_get_contents(realpath(__DIR__."/../../../../.github-token")), Client::AUTH_HTTP_TOKEN);
 
-        foreach ($this->getParameters()["students_github_usernames"] as $username) {
-            $dbUser = $this->db->users->findOne(['username' => $username]) ?: ['username' => $username];
+        foreach ($usernames as $username) {
+            $progress->advance();
+            $user = ['username' => $username];
 
-            $dbUser['users/'.rawurlencode($username)] = $githubClient->api('users')->show($username);
-            $dbUser['users/'.rawurlencode($username).'/repos'] = $githubClient->api('users')->repositories($username, 'all');
+            $user['users/'.rawurlencode($username)] = $githubClient->api('users')->show($username);
+            $user['users/'.rawurlencode($username).'/repos'] = $githubClient->api('users')->repositories($username, 'all');
 
-            $status = $this->db->users->insert($dbUser);
+            $status = $this->db->users->update(['username' => $username], $user, ["upsert" => true]);
         }
 
+        $progress->finish();
         $output->writeln('Success import');
     }
 
