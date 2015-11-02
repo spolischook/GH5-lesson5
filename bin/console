@@ -3,7 +3,6 @@
 
 require __DIR__.'/../vendor/autoload.php';
 
-use App\Console\Command\GetGitHubUserStatsCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Yaml\Yaml;
 
@@ -11,7 +10,8 @@ $githubClient = new \Github\Client();
 $githubClient->authenticate(file_get_contents(realpath(__DIR__."/../.github-token")), \Github\Client::AUTH_HTTP_TOKEN);
 
 $application = new Application();
-$application->add(new GetGitHubUserStatsCommand(initDb(), $githubClient));
+$application->add(new \App\Console\Command\GetGitHubUserStatsCommand(initDb(), $githubClient));
+$application->add(new \App\Console\Command\GetGitHubUserStatsBatchCommand(getParameters()['students_github_usernames']));
 $application->run();
 
 /**
