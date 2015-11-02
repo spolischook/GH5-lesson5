@@ -2,31 +2,40 @@
 
 namespace App\Console\Command;
 
-use Github\Client;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Yaml\Yaml;
 
 class GetGitHubUserStatsCommand extends Command
 {
-    /** @var array  */
-    private $parameters;
-
     /** @var  \MongoDB */
     private $db;
+
+    /** @var \Github\Client  */
+    private $githubClient;
 
     /**
      * {@inheritdoc}
      */
-    public function __construct($name = 'get-github-user-stats')
+    public function __construct(\MongoDB $db, \Github\Client $githubClient)
     {
-        $this->initDb();
+        $this->db = $db;
+        $this->githubClient = $githubClient;
 
-        parent::__construct($name);
+        parent::__construct('get-github-user-stats');
+    }
+
+    /**
+     * @return void
+     */
+    protected function configure()
+    {
+        $this->addArgument(
+            'username',
+            InputArgument::REQUIRED,
+            'GitHub username for grab public statistic'
+        );
     }
 
     /**
@@ -37,56 +46,16 @@ class GetGitHubUserStatsCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln('get GitHub stats');
-        $progress = new ProgressBar($output);
-        $usernames = $this->getParameters()["students_github_usernames"];
-        $progress->start(count($usernames));
+        $username = $input->getArgument('username');
+        $output->writeln('get GitHub stats for '.$username);
 
-        $githubClient = new Client();
-        $githubClient->authenticate(file_get_contents(realpath(__DIR__."/../../../../.github-token")), Client::AUTH_HTTP_TOKEN);
+        $user                              = ['username' => $username];
+        $user['users/'.$username]          = $this->githubClient->api('users')->show($username);
+        $user['users/'.$username.'/repos'] = $this->githubClient->api('users')->repositories($username, 'all');
 
-        foreach ($usernames as $username) {
-            $progress->advance();
-            $user = ['username' => $username];
+        $this->db->users->update(['username' => $username], $user, ["upsert" => true]);
 
-            $user['users/'.rawurlencode($username)] = $githubClient->api('users')->show($username);
-            $user['users/'.rawurlencode($username).'/repos'] = $githubClient->api('users')->repositories($username, 'all');
-
-            $status = $this->db->users->update(['username' => $username], $user, ["upsert" => true]);
-        }
-
-        $progress->finish();
         $output->writeln('Success import');
-    }
-
-    /**
-     * @return array
-     * @throws
-     */
-    protected function getParameters()
-    {
-        if (!$this->parameters) {
-            if (!$parametersYmlFile = realpath(__DIR__."/../../../../parameters.yml")) {
-                throw \InvalidArgumentException('Can\'t find parameters.yml file');
-            }
-
-            $this->parameters = Yaml::parse($parametersYmlFile);
-        }
-
-        return $this->parameters;
-    }
-
-    /**
-     * @return \MongoDB
-     */
-    protected function initDb()
-    {
-        $m = new \MongoClient();
-        $dbName = $this->getParameters()['database']['name'];
-
-        $this->db = $m->$dbName;
-
-        return $this;
     }
 }
 
