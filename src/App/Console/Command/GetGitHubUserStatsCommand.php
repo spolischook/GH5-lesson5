@@ -16,7 +16,8 @@ class GetGitHubUserStatsCommand extends Command
     private $githubClient;
 
     /**
-     * {@inheritdoc}
+     * @param \MongoDB $db
+     * @param \Github\Client $githubClient
      */
     public function __construct(\MongoDB $db, \Github\Client $githubClient)
     {
