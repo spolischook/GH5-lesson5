@@ -1,1 +1,4 @@
+database:
+  host: 'localhost'
+  name: 'lesson5'
 students_github_usernames: []
