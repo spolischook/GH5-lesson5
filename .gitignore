@@ -3,3 +3,6 @@ node_modules/
 bower_components
 parameters.yml
 .github-token
+web/js
+web/css
+cache/
