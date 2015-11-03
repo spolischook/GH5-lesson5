@@ -1,12 +1,41 @@
 #!/usr/bin/env php
 <?php
-// application.php
 
 require __DIR__.'/../vendor/autoload.php';
 
-use App\Console\Command\GetGitHubUserStatsCommand;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Yaml\Yaml;
+
+$githubClient = new \Github\Client();
+$githubClient->authenticate(file_get_contents(realpath(__DIR__."/../.github-token")), \Github\Client::AUTH_HTTP_TOKEN);
 
 $application = new Application();
-$application->add(new GetGitHubUserStatsCommand());
+$application->add(new \App\Console\Command\GetGitHubUserStatsCommand(initDb(), $githubClient));
+$application->add(new \App\Console\Command\GetGitHubUserStatsBatchCommand(getParameters()['students_github_usernames']));
 $application->run();
+
+/**
+ * @return array
+ * @throws
+ */
+function getParameters()
+{
+    if (!$parametersYmlFile = realpath(__DIR__."/../parameters.yml")) {
+        throw \InvalidArgumentException('Can\'t find parameters.yml file');
+    }
+
+    return Yaml::parse($parametersYmlFile);
+}
+
+/**
+ * @return \MongoDB
+ */
+function initDb()
+{
+    $m = new \MongoClient();
+    $dbName = getParameters()['database']['name'];
+
+    $db = $m->$dbName;
+
+    return $db;
+}
