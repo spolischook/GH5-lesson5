@@ -50,9 +50,22 @@ class GetGitHubUserStatsCommand extends Command
         $username = $input->getArgument('username');
         $output->writeln('get GitHub stats for '.$username);
 
-        $user                              = ['username' => $username];
-        $user['users/'.$username]          = $this->githubClient->api('users')->show($username);
-        $user['users/'.$username.'/repos'] = $this->githubClient->api('users')->repositories($username, 'all');
+        $user            = ['username' => $username];
+        $user['info']    = $this->githubClient->api('users')->show($username);
+        $user['repos']   = $this->githubClient->api('users')->repositories($username, 'all');
+        $user['commits'] = [];
+        foreach ($user['repos'] as $repo) {
+            try {
+                $repoCommits = $this->githubClient->api('repositories')->commits()->all($repo['owner']['login'], $repo['name'], [
+                    'author' => $username,
+                    'since'  => '2015-10-01T00:00:00Z'
+                ]);
+            } catch (\Exception $e) {
+                $repoCommits = [];
+            }
+            $user['commits'] = array_merge($user['commits'], $repoCommits);
+        }
+
 
         $this->db->users->update(['username' => $username], $user, ["upsert" => true]);
 
