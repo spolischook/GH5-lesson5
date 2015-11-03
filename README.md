@@ -5,6 +5,8 @@ GH5 students GitHub statistic
 
 ### Usage
 
+You need create github token see - https://help.github.com/articles/creating-an-access-token-for-command-line-use/
+Store it in .github-token file
 
 For update statistic use console command
 
