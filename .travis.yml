@@ -8,5 +8,5 @@ before_script:
     - composer install
 
 script:
-  - php bin/phpunit
+  - php phpunit
 
